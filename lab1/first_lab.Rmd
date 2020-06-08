@@ -1,0 +1,87 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+data(package='MASS')
+data(Pima.tr, package='MASS')
+view(Pima.tr)
+
+# you have to do 2 question marks because we never "libraried in" the MASS package
+??Pima.tr
+```
+
+# Descriptive stats (in-class notes)
+
+```{r}
+Pima.tr$npreg
+summary(Pima.tr)
+str(Pima.tr)
+summary(Pima.tr$npreg)
+table(Pima.tr$npreg)
+table(Pima.tr$type)
+str(Pima.tr$type)
+summary(Pima.tr$type)
+Pima.tr$type=as.character(Pima.tr$type)
+mean(Pima.tr$npreg)
+class(Pima.tr$npreg)
+```
+
+# Question 1: How many rows and columns are in the dataset?
+
+```{r}
+install.packages('NHANES')
+data(NHANES, package = 'NHANES')
+```
+
+```{r}
+str(NHANES)
+```
+There are 76 colums and 10000 rows in the dataset. 
+
+
+# Question 2: What is the distribution (6-number summary) for the systolic blood pressure (first reading only)?
+
+```{r}
+summary(NHANES$BPSys1 )
+```
+
+# Question 3: Directly calculate the mean and median systolic blood pressure (SBP) using the mean() and median() functions.
+
+```{r}
+mean(NHANES$BPSys1, na.rm= TRUE)
+median(NHANES$BPSys1, na.rm= TRUE)
+```
+
+
+# Question 4: What is the 10th and 90th percentile for systolic blood pressure?
+```{r}
+quantile(NHANES$BPSys1, c(0.1,0.9), na.rm= TRUE)
+```
+
+
+# Question 5: What is the second highest systolic blood pressure? How many people have this SBP?
+
+```{r}
+table(NHANES$BPSys1)
+```
+The second highest systolic blood pressure is 224, and there are 2 people having this SBP.
+
+
+# Question 6: What is the breakdown for education level for people in this dataset? How many people are in each type of group?
+
+```{r}
+table(NHANES$Education)
+```
+
+There are 5 education groups: 8th grade, 9-11th grade, High School, Some college and College Grad.
+
+There are 451 people in 8th Grade, 888 people in 9-11th Grade, 1517 people in High School, 2267 people in Some College, 2098 people are College graduates.
+
+
