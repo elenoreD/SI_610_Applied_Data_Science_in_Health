@@ -1,0 +1,82 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+library(NHANES)
+data('NHANES')
+
+```
+
+1. What is the 90th percentile of systolic blood pressure (first reading) for men versus women?
+
+```{r}
+NHANES %>% group_by(Gender) %>% summarise(the_90th_percentile_of_systolic_blood_pressure=quantile(BPSys1,.9, na.rm=TRUE))
+
+```
+
+
+2. What is the breakdown for education level for people in this dataset? How many people are in
+each type of group?
+
+```{r}
+NHANES %>% group_by(Education) %>% summarise(population_in_this_group=n())
+```
+
+
+3. What is the mean and median age for people with and without diabetes?
+
+```{r}
+NHANES %>% group_by(Diabetes) %>% summarise(mean=mean(Age),median=median(Age))
+```
+
+
+4. What is the second highest systolic blood pressure? How many people have this SBP?
+
+```{r}
+NHANES  %>% select(BPSys1) %>% group_by(BPSys1) %>% summarise(num=n())%>% arrange(desc(BPSys1)) %>% slice(2) %>% rename(second_highest_systolic_blood_pressure=BPSys1, number_of_people_having_this_SBP=num)
+```
+
+
+Read in the 2015-2016 NHANES demographics data from the CDC website (just like in
+homework). This dataset has a variable WTINT2YR, which tells you how many people (in the
+U.S. population) are similar to that person who was included in the survey. For example, if a
+person had a weight of 1000, that would mean that 1000 people in all of the U.S. have similar
+characteristics.
+ 
+
+5. What is the U.S. population? Hint: use the weighting variable above to figure it out.
+
+```{r}
+library(haven)
+wtint2yr=read_xpt('https://wwwn.cdc.gov/Nchs/Nhanes/2015-2016/DEMO_I.XPT')
+```
+
+```{r}
+wtint2yr %>% summarise(U.S.population=sum(WTINT2YR)) 
+```
+
+6. What are the proportions of race across the U.S population? How does your answer differ if you consider each row as a single person versus if you take the weighting variable into account?
+
+```{r}
+# I use each row as weighting variable 
+wtint2yr %>% 
+  group_by(RIDRETH3) %>% 
+  summarise(population_per_group=sum(WTINT2YR)) %>%
+  mutate(Proportion=population_per_group/sum(population_per_group)) %>% mutate(RIDRETH3=c('Mexican American', 'Other Hispanic', 'Non-Hispanic White', 'Non-Hispanic Black', 'Non-Hispanic Asian', 'Other Race - Including Multi-Racial')) %>% 
+  rename(Race=RIDRETH3)
+```
+
+```{r}
+# I use each row as a single person
+wtint2yr %>% group_by(RIDRETH3) %>% summarise(population_per_group=n()) %>% mutate(Proportion=population_per_group/sum(population_per_group)) %>% mutate(RIDRETH3=c('Mexican American', 'Other Hispanic', 'Non-Hispanic White', 'Non-Hispanic Black', 'Non-Hispanic Asian', 'Other Race - Including Multi-Racial')) %>% 
+  rename(Race=RIDRETH3)
+```
+
+It can be seen that if I use each row as a single person, the population of each race is clearly too little, and the proportion is bigger than that when I use each row as weighting variable. 
