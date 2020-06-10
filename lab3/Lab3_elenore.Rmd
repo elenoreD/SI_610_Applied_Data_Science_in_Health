@@ -1,0 +1,136 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+load('namcs08.RData')
+```
+
+```{r}
+library(tidyverse)
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file). 
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
+#Q1: Diabetes can cause stiffening of the arteries, which can lead to patients having a higher blood pressure due to the increased resistance in the arteries. In this dataset, do patients with diabetes have a higher mean blood pressure than patients without diabetes? Use the diabetes column in the pmh data frame to help you answer the question.
+
+```{r}
+join_table=left_join(pmh, patients, by='id')
+    join_table %>% group_by(diabetes) %>% summarise(mean(sbp,na.rm =TRUE),mean(dbp,na.rm =TRUE))
+
+```
+Yes, patients with diabetes have a higher mean blood pressure than patients without diabetes.
+
+#Q2: What are the top 5 reasons why men and women visit the doctor? Are they the same for men and women, or do you notice any differences?
+
+```{r}
+patients %>%  select(visitreason,sex) %>% group_by(sex,visitreason) %>% 
+  summarise(n = n()) %>% arrange(desc(n)) %>% slice(1:5)
+```
+
+#Q3: How many patients in the dataset have a systolic blood pressure of greater than 140 (which is considered high) but do not know about it? You can assume that patients do not know about their high blood pressure if the htn column (short for "hypertension" or "high blood pressure") is marked as a 0 in the pmh data frame.
+
+```{r}
+join_table %>% filter(sbp>140 & htn==0) %>% summarise(patients_dont_know_their_sbp=n())
+```
+
+#Q4: Create a new data frame that contains the same information as the pmh data frame except it has 2 columns with the data looking like this. Your first 10 rows of data should match this below. Save this result to a new data frame called "comorbidities".
+
+id diagnosis
+
+1 arthritis
+
+1 hyperlipid
+
+1 htn
+
+1 ihd
+
+3 hyperlipid
+
+3 htn
+
+4 depression
+
+4 htn
+
+5 depression
+
+5 hyperlipid
+
+```{r}
+comorbidities= gather(pmh,key='diagnosis', value='have',arthritis:osteoporosis) %>% filter(have==1) %>% arrange(id) %>% select(-have)
+
+comorbidities
+```
+
+
+#Q5: Using your newly created comorbidities data frame, convert it back to a form that matches the pmh data frame (note: that the column order may be slightly different, and it's okay if you have rows missing where patients have none of the listed comorbidities). Hint: Take a look at question 4 and work backwards. Also, take a look at the fill argument for the spread() function in order to replace missing values with zeros.
+
+```{r}
+
+comorbidities %>% mutate(have=1) %>% spread(key=diagnosis,value =have, fill = 0)
+```
+
+
+
+#Q6: Determine the top 3 most popular office hour time slots based on student selections.
+
+
+```{r}
+office_hour=read_csv('office_hours_data.csv')
+```
+
+```{r}
+gather(office_hour, key='day', value='time', `Mondays (Select ONLY TWO)`:`Friday (Select TWO)`) %>% separate_rows(time, sep = ';') %>% group_by(day, time) %>% summarise(count=n()) %>% arrange(desc(count))
+```
+
+Top 3 most popular office hour time slots based on student selections are:
+12-1pm on Thursdays,
+1-2pm on Tuesdays,
+1-2pm on Mondays
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
