@@ -1,0 +1,129 @@
+---
+title: "R Notebook"
+output: 
+  html_document: 
+    toc: True
+    toc_float: True
+runtime: shiny  # for shiny
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+# setup
+
+```{r include=FALSE}
+library(tidyverse)
+library(shiny) # for shiny
+library(rlang) # for shiny
+load('namcs08.RData')
+```
+
+# 1. Let's say an X-ray costs $50, an ultrasound costs $100, a mammogram costs $200, a CT scan costs $500, PET costs $700, and MRI costs $1000. How much do individuals in the NAMCS dataset spend on imaging tests on average (mean and median)?
+
+# (Note that some Americans have not had any of the above tests and thus spend no money on imaging tests.)
+
+```{r}
+tests_with_cost=tests %>% mutate(test_cost=case_when(
+  test=='xray' ~ 50,
+  test=='ultrasound' ~ 100,
+  test=='mammogram' ~ 200,
+  test=='ct'~500,
+  test=='pet'~700,
+  test=='mri'~1000,
+  TRUE ~ 0
+))
+
+cost_per_id=tests_with_cost %>% group_by(id) %>% summarise(cost_per_id=sum(test_cost))
+
+right_join(cost_per_id, patients, by='id') %>% select(id, cost_per_id) %>% mutate(cost_per_id=if_else(is.na(cost_per_id), 0, cost_per_id)) %>% summarise(mean=mean(cost_per_id),median=median(cost_per_id))
+
+```
+Idividuals in the NAMCS dataset spend on imaging tests on average is roughly $40, however the median value is 0. That's probably because there are many patients who never had any of imaging tests. 
+
+# 2. Generate a plot that demonstrates the relationship between age and height. What is your interpretation of this?
+
+```{r}
+ggplot(patients, aes(x=age, y=height))+geom_point(size=0.1)+geom_smooth(na.rm = TRUE)
+```
+Human are born with certain height, therefore, the initial height is around 25 (I'm not clear about unit, feet or cm). From age 0 to age 18, the height increases with age, while after 18, height tends to remain same, and shrink a little bit after age 80. 
+
+# 3. What is the distribution of payment method (paytype column in the patients data frame)? Which insurance is most and least common?
+
+```{r}
+patients %>% ggplot(aes(x=paytype))+geom_bar()+coord_flip()
+```
+As shown on the bar chart, majority of pament method are Private insurance, following by Medicare and  Medicaid. There are very few cases of No charge and workers compensation.
+
+The most common insurance is Private insurance, I'm not sure about the lease common insurance, since I don't know if other types of payments, like workers compensation, are insurance or not.
+
+# 4. Is depression more common in patients with diabetes as compared to individuals without diabetes? Use the pmh data frame. Before you plot, you should use mutate() to convert the diabetes column into a character variable with values of "Diabetes" and "No diabetes" (for values 1 and 0, respectively) and convert the depression column into a character variable with values of "Depression" and "No depression". 
+
+```{r}
+pmh %>% mutate(ifDiabetes=case_when(
+  diabetes==1 ~ "Diabetes",
+  diabetes==0 ~ "No Diabetes"
+)) %>% mutate(ifDepression=case_when(
+  depression==1 ~ "Depression",
+  depression==0 ~ "No depression"
+)) %>% select(id, ifDiabetes, ifDepression) %>% ggplot(aes(x=ifDiabetes, fill=ifDepression))+geom_bar(position = 'fill')
+
+
+
+```
+Yes, the number of depressed people who has diabetes seems more than those who hasn't diabetes. 
+
+# 5. Generate these box plots showing the distribution of systolic blood pressure (sbp) for individuals whose visit reason was "Hypertension". Interpret the findings of the plot.
+
+```{r}
+patients_reason=patients %>% mutate(`What is the reason`=if_else((visitreason=="Hypertension"), "Hypertension", "No Hypertension"))
+ggplot(patients_reason, aes(x=`What is the reason`, y=sbp))+geom_boxplot()
+```
+Patients who's visit reason is Hypertension tend to have higher sbp value than those whose visit reasons are others. Patients with non-hypertension visit reason have more extreme sbp values. 
+
+# 6. Generate this plot showing the relationship between height and weight for different age groups. Interpret the findings of the plot.
+
+```{r}
+patients %>%   mutate(age_cat = case_when(
+  age <= 9 ~ 'Age 09 or younger',
+  age <= 29 ~ 'Age 10-19',
+  age <= 39 ~ 'Age 20-39',
+  age <= 79 ~ 'Age 40-79',
+  TRUE ~ 'Age 80 and above')) %>%
+  ggplot(aes(x=weight, y=height))+geom_point()+geom_smooth()+facet_wrap(~age_cat,nrow=1)
+
+
+```
+Overall trend is height increases with weight for all age groups. 
+
+For people aged below 9, their height increases with weight, and height range limited to 60, and weight range limited to 150.
+
+For people aged above 10, height and weight still have positive relations, while the slopes changing. 
+For example, for people aged between 10-19, height increases with weight until 65, when it starts to slowly increase, and eventually decrease when it reach to 68. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
