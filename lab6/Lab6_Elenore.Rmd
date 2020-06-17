@@ -1,0 +1,106 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+library(tidyverse)
+load('namcs08.RData')
+```
+
+
+# 1. Evaluate the relationship between age and height. What is the null hypothesis? What is the alternative hypothesis? Run the appropriate statistical test. What is your interpretation of the statistical test?
+
+Null hypothesis: There is no relationship between age and height.
+Alternative hypothesis: There is a relationship between age and height.
+Which test: Pearson or Spearman correlation test (2 sample 2 Continuous variables)
+
+```{r}
+ggplot(patients, aes(x=age))+geom_histogram()
+ggplot(patients, aes(x=height))+geom_histogram()
+
+```
+From the histgrams, both age and height don't have normal distributions. So I will choose Spearman correlation test.
+
+```{r}
+cor.test(patients$age, patients$height, alternative='two.sided', method='spearman')
+```
+The null hypothesis is that there is no relationship between age and height. There is a < 2.2e-16 probability that we would observe this data (or data more extreme than what we found) based on random chance alone. 
+
+# 2. Which statistical test would help you evaluate whether the mean cost per person is close to $30?
+
+I will choose Wilcoxon test.Since it's one sample test (compare cost to a fixed value), and I'm not sure about the cost distribution, so Wilcoxon can bypass the risk of weird distribution variables.
+
+The code could be something like this: wilcox.test(data$cost, mu=30)
+
+# 3. What is the difference between a one-sample and a two-sample test?
+
+two-sample test has Exposure variable while one-sample test doesn't. 
+two-sample test is comparing two groups of sample, while one-sample test is checking a fact in one group.
+
+I found a good example from Quora:
+
+one sample t-test is a statistical procedure where you wanted to test that where your population mean is different than a constant value(fix number). For example, a school wants to test that average mean of GPA for grad students is 3.0. They will use one sample t-test and can get the result.
+
+Two sample t-test is also a statistical procedure where you are interested in testing whether these two population has the same mean or different mean. In the same example if the school is interested in testing that average GPA for science major and arts major is the same. Then they would have used two-sample t-test.
+
+source: https://www.quora.com/What-is-the-difference-between-one-sample-and-two-sample-t-test
+
+# 4. When would you choose a Wilcoxon test as opposed to a t-test?
+
+As the Wilcoxon signed-rank test does not assume normality in the data, it can be used when this assumption has been violated.  
+
+
+# 5. Is depression more common in patients with diabetes as compared to individuals without diabetes? To answer this, first answer the following questions: What is the null hypothesis? What is the alternative hypothesis? Run the appropriate statistical test. What is your interpretation of the statistical test?
+
+Null hypothesis: Whether patients have diabetes has no relationship with their depression status.
+
+Alternative hypothesis: Patients' depression status has relationship with their depression status.
+
+Which test: Chi-square test (2 sample 2 Categorical variables)
+
+
+```{r}
+chisq.test(table(pmh$depression,pmh$diabetes))
+
+```
+According to p-value, I have 0.01 chance to observe the patients have diabetes has no relationship with their depression status by random choice.
+
+# 6. Compare the systolic blood pressure for individuals whose visit reason was “Hypertension” to those who had any other visit reason. What is the null hypothesis? What is the alternative hypothesis? Run the appropriate statistical test. What is your interpretation of the statistical test?
+
+Null hypothesis: The systolic blood pressure for individuals whose visit reason was “Hypertension” has no difference with those who had any other visit reason.
+
+Alternative hypothesis: The systolic blood pressure for individuals whose visit reason was “Hypertension” has difference with those who had any other visit reason.
+
+Which test: Two-sample t-test or Wilcoxon test (2 sample 1 Categorical variable and 1 Continuous variable)
+
+```{r}
+patients=patients %>% mutate(hp = ifelse(visitreason=="Hypertension", 'Hypertension', 'Non-Hypertension' ))
+ggplot(patients, aes(x=sbp,fill=hp))+geom_density(alpha=0.5)
+```
+Since the distribution of patients with Hypertension and Non-Hypertension visit reason are normal, I will choose Two-sample t-test.
+
+```{r}
+patients1=patients %>% filter(hp=="Hypertension") 
+patients2=patients %>% filter(hp=='Non-Hypertension') 
+x=patients1$sbp
+y=patients2$sbp
+
+t.test(x,y)
+```
+The chance I can observe patient's sbp (Hypertension) is no difference with patient's sbp (Non-Hypertension) is very small.
+
+# 7. Which of the following tests are most appropriate when variables are NOT normally distributed? Select all that apply.
+
+Chi-squared test
+
+Wilcoxon test
+
+Kruskal-Wallis test
+
+Spearman correlation test
+
